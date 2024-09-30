@@ -11,6 +11,9 @@ interface Dao {
     @Query("SELECT * FROM note")
     fun getAllNotes(): List<Note>
 
+    @Query("SELECT * FROM note WHERE id = :id")
+    fun getById(id: Int): Note
+
     @Update
     fun updateNote(note: Note)
 
