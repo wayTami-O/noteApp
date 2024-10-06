@@ -1,4 +1,4 @@
-package com.example.roomsolo
+package com.example.roomsolo.tools
 
 import androidx.room.Dao
 import androidx.room.Delete

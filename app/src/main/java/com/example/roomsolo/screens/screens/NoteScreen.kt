@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
@@ -27,7 +28,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -38,21 +38,24 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Color.Companion.White
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.roomsolo.Note
+import com.example.roomsolo.screens.viewModel.NoteViewModel
+import com.example.roomsolo.tools.Note
 import com.example.roomsolo.ui.theme.gray
 import com.example.roomsolo.ui.theme.light_gray
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NoteDetailView(
-    note: Note,
+    note: Note?,
     navController: NavController,
-    delete: (Note) -> Unit,
-    editNote: (Note) -> Unit
+    newNote: Boolean,
+    viewModel: NoteViewModel,
+    delete: (Note?) -> Unit,
 ) {
     var showDelete by remember {
         mutableStateOf(false)
@@ -63,15 +66,15 @@ fun NoteDetailView(
     }
 
     var edit by remember {
-        mutableStateOf(false)
+        mutableStateOf(newNote)
     }
 
     var textTitle by remember {
-        mutableStateOf(note.title)
+        mutableStateOf(if (newNote) "" else note?.title ?: "")
     }
 
     var textDescription by remember {
-        mutableStateOf(note.description)
+        mutableStateOf(if (newNote) "" else note?.description ?: "")
     }
 
     Scaffold(
@@ -81,7 +84,7 @@ fun NoteDetailView(
                     Text("Note", fontSize = 23.sp)
                 },
                 navigationIcon = {
-                    IconButton(onClick = { navController.navigate("notes") }) {
+                    IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
                             imageVector = Icons.Default.KeyboardArrowLeft,
                             contentDescription = "Назад",
@@ -90,17 +93,34 @@ fun NoteDetailView(
                     }
                 },
                 actions = {
-                    IconButton({ showDelete = true }) {
-                        Icon(
-                            Icons.Default.Delete,
-                            contentDescription = "Удалить"
-                        )
+                    if (!newNote) {
+                        IconButton({ showDelete = true }) {
+                            Icon(
+                                Icons.Default.Delete,
+                                contentDescription = "Удалить"
+                            )
+                        }
                     }
-                    IconButton({ editNote(note) }) {
-                        Icon(
-                            Icons.Default.Edit,
-                            contentDescription = "Редактировать"
-                        )
+                    if (!edit) {
+                        IconButton({ edit = true }) {
+                            Icon(
+                                Icons.Default.Edit,
+                                contentDescription = "Редактировать"
+                            )
+                        }
+                    } else {
+                        IconButton({
+                            edit = false
+                            viewModel.insertNote(Note(null, textTitle, textDescription))
+                            if (newNote) {
+                                navController.popBackStack()
+                            }
+                        }) {
+                            Icon(
+                                Icons.Default.Check,
+                                contentDescription = "Готово"
+                            )
+                        }
                     }
                     DropdownMenu(
                         expanded = showDelete,
@@ -143,7 +163,7 @@ fun NoteDetailView(
             ) {
                 if (!edit) {
                     Text(
-                        text = note.title,
+                        text = note?.description.toString(),
                         color = White,
                         modifier = Modifier
                             .fillMaxWidth()
@@ -163,7 +183,7 @@ fun NoteDetailView(
                             .background(light_gray)
                     )
                     Text(
-                        text = note.description,
+                        text = note?.description.toString(),
                         color = White,
                         modifier = Modifier
                             .padding(
@@ -189,8 +209,19 @@ fun NoteDetailView(
                             .border(
                                 0.dp,
                                 Color.Transparent
-                            ),
-                        textStyle = TextStyle(color = White)
+                            )
+                            .fillMaxWidth(),
+                        textStyle = TextStyle(color = White),
+                        cursorBrush = SolidColor(White),
+                        decorationBox = { innerTextField ->
+                            if (textTitle?.isEmpty()!!) {
+                                Text(
+                                    style = TextStyle(color = light_gray),
+                                    text = "Введите заголовок заметки"
+                                )
+                            }
+                            innerTextField()
+                        }
                     )
                     Divider(
                         modifier = Modifier
@@ -203,6 +234,7 @@ fun NoteDetailView(
                         onValueChange = {
                             textDescription = it
                         },
+                        cursorBrush = SolidColor(White),
                         modifier = Modifier
                             .background(gray)
                             .padding(
@@ -213,7 +245,16 @@ fun NoteDetailView(
                                 0.dp,
                                 Color.Transparent
                             ),
-                        textStyle = TextStyle(color = White)
+                        textStyle = TextStyle(color = White),
+                        decorationBox = { innerTextField ->
+                            if (textDescription?.isEmpty()!!) {
+                                Text(
+                                    style = TextStyle(color = light_gray),
+                                    text = "Введите описание заметки"
+                                )
+                            }
+                            innerTextField()
+                        }
                     )
                 }
             }

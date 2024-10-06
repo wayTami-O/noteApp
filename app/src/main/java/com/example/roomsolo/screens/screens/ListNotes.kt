@@ -37,7 +37,7 @@ import androidx.compose.ui.graphics.Color.Companion.White
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.roomsolo.Note
+import com.example.roomsolo.tools.Note
 import com.example.roomsolo.ui.theme.dark_gray
 import com.example.roomsolo.ui.theme.gray
 import com.example.roomsolo.ui.theme.light_gray
@@ -75,7 +75,7 @@ fun ListScreen(
         },
         floatingActionButton = {
             FloatingActionButton(onClick = {
-
+                onClick(Note(null, "", ""))
             }) {
                 Icon(imageVector = Icons.Default.Add, contentDescription = "Add")
             }
