@@ -3,6 +3,7 @@ package com.example.roomsolo.di
 import android.content.Context
 import androidx.room.Room
 import com.example.roomsolo.tools.AppDatabase
+import com.example.roomsolo.tools.Dao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -20,6 +21,10 @@ class AppModule {
             context.applicationContext,
             AppDatabase::class.java,
             "app_bd"
-        ).build()
+        ).fallbackToDestructiveMigration().build()
     }
+
+    @Provides
+    @Singleton
+    fun provideDao(appDatabase: AppDatabase): Dao = appDatabase.noteDao()
 }

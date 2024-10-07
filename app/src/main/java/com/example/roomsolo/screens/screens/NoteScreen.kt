@@ -1,5 +1,6 @@
 package com.example.roomsolo.screens.screens
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.border
@@ -31,6 +32,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -47,16 +51,25 @@ import com.example.roomsolo.screens.viewModel.NoteViewModel
 import com.example.roomsolo.tools.Note
 import com.example.roomsolo.ui.theme.gray
 import com.example.roomsolo.ui.theme.light_gray
+import kotlinx.coroutines.flow.MutableStateFlow
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NoteDetailView(
-    note: Note?,
+    noteId: Int?,
     navController: NavController,
     newNote: Boolean,
     viewModel: NoteViewModel,
     delete: (Note?) -> Unit,
 ) {
+    val note by viewModel.note.collectAsState()
+
+    LaunchedEffect(key1 = Unit) {
+        if (noteId != null) {
+            viewModel.getById(noteId)
+        }
+    }
+
     var showDelete by remember {
         mutableStateOf(false)
     }
@@ -111,9 +124,12 @@ fun NoteDetailView(
                     } else {
                         IconButton({
                             edit = false
-                            viewModel.insertNote(Note(null, textTitle, textDescription))
                             if (newNote) {
+                                viewModel.insertNote(Note(null, textTitle, textDescription))
                                 navController.popBackStack()
+                            } else {
+                                Log.d("TAG", note.toString())
+                                note?.let { viewModel.updateNote(it) }
                             }
                         }) {
                             Icon(
@@ -163,7 +179,7 @@ fun NoteDetailView(
             ) {
                 if (!edit) {
                     Text(
-                        text = note?.description.toString(),
+                        text = note?.title.toString(),
                         color = White,
                         modifier = Modifier
                             .fillMaxWidth()
@@ -267,7 +283,9 @@ fun NoteDetailView(
             text = { Text(text = "Вы действительно хотите удалить заметку?") },
             confirmButton = {
                 Button(
-                    onClick = { showDialog = false },
+                    onClick = {
+                        note?.let { viewModel.deleteNote(it) }
+                    },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = light_gray,
                         contentColor = White
